@@ -148,69 +148,57 @@ if __name__ == '__main__':
         makedirs('files')
         makedirs('files/AssetBundles/blocks')
         makedirs('files/VideoAssets/Android')
-        makedirs('files/Audio/')
+        makedirs('files/AudioAssets/')
         
     else:
         log('checking for updates...')
 
-        # pass 1
-        updated_1 = True
-        for file in resources:
-            suffix = ''
-            if re.search('\\.blk$', file['remoteName']):
-                suffix = 'AssetBundles/'
-            elif re.search('\\.usm$', file['remoteName']):
-                suffix = 'VideoAssets/Android/'
-            elif re.search('\\.cuepoint$', file['remoteName']):
-                suffix = 'VideoAssets/'
-            elif re.search('\\.pck$', file['remoteName']):
-                suffix = 'Audio/'
-
-            if not path.exists('files/' + suffix + file['remoteName']):
-                updated_1 = False
-            else:
-                resources.remove(file)
-
-        if updated_1:
-            exit(0)
+        # TODO: do a checksum check from the information we've gathered
  
     print('')
     for file in resources:
         suffix = ''
         if re.search('\\.blk$', file['remoteName']):
             suffix = 'AssetBundles/'
-        elif re.search('\\.usm$', file['remoteName']):
-            suffix = 'VideoAssets/Android/'
-        elif re.search('\\.cuepoint$', file['remoteName']):
+        elif re.search('\\.usm$', file['remoteName']) or re.search('\\.cuepoint$', file['remoteName']):
             suffix = 'VideoAssets/'
         elif re.search('\\.pck$', file['remoteName']):
-            suffix = 'Audio/'
+            suffix = 'AudioAssets/' 
 
-        #log('downloading {file}...'.format(file = suffix + file['remoteName']))
-        #log('url ' + endpoint + suffix + file['remoteName'])
-        dir = path.dirname(file['remoteName'])
-        if dir != '':
-            makedirs('files/' + suffix + dir, 0o777, True)
+        filepath = 'files/' + suffix + file['remoteName']
+        if path.isfile(filepath) == False:
+            #log('downloading {file}...'.format(file = suffix + file['remoteName']))
+            #log('url ' + endpoint + suffix + file['remoteName'])
+            dir = path.dirname(file['remoteName'])
+            if dir != '':
+                makedirs('files/' + suffix + dir, 0o777, True)
 
-        # download_file(endpoint + suffix + file['remoteName'], 'files/' + suffix + file['remoteName'])
-        # use aria2c
+            # download_file(endpoint + suffix + file['remoteName'], 'files/' + suffix + file['remoteName'])
+            # use aria2c
 
-        subprocess.run(['aria2c', 
-            '--out=files/' + suffix + file['remoteName'],
-            '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-            '--download-result=hide', '--continue=true', endpoint + suffix + file['remoteName']
-        ])
-            
+            subprocess.run(['aria2c', 
+                '--out=' + filepath,
+                '--max-concurrent-downloads=8', '--max-connection-per-server=8',
+                '--download-result=hide', '--continue=true', endpoint + suffix + file['remoteName']
+            ])
+        else:
+            log(filepath + ' already existed, skipping...')
+                
     for pck in audio_resources[genshin_audio_language]:
-        log('downloading {file}'.format(file = 'Audio/' + pck['remoteName']))
+        # log('downloading {file}'.format(file = 'AudioAssets/' + pck['remoteName']))
         # download_file(endpoint + 'Audio/' + pck['remoteName'], 'files/' + 'Audio/' + pck['remoteName'])
         # use aria2c
 
-        subprocess.run(['aria2c',
-            '--out=files/' + 'Audio/' + pck['remoteName'],
-             '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-             '--download-result=hide', '--continue=true', endpoint + 'Audio/' + file['remoteName']
-        ])
+        filepath = 'files/AudioAssets/'+ pck['remoteName']
+
+        if path.isfile(filepath) == False:
+            subprocess.run(['aria2c',
+                '--out=' + filepath,
+                '--max-concurrent-downloads=8', '--max-connection-per-server=8',
+                '--download-result=hide', '--continue=true', endpoint + 'AudioAssets/' + file['remoteName']
+            ])
+        else:
+            log(filepath + ' already existed, skipping...')
     log('done!')
 else:
     print('Please do not import this file, run it with python instead.')
