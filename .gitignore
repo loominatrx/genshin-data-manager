@@ -1,0 +1,8 @@
+# ignore genshin files
+./files/*
+
+# ignore version files
+./base_revision
+./audio_lang_14
+./res_versions_remote
+./ScriptVersion
