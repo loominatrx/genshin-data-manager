@@ -14,8 +14,8 @@ Please do your own research on how to install those prerequisities, as I do not 
 ## How to use
 
 - Clone this repository
-  `git clone https://github.com/Loominagit/genshin-data-manager`
-  or just download the source code from the website...
+    `git clone https://github.com/Loominagit/genshin-data-manager`
+    or just download the source code from the website...
 - `cd genshin-data-manager` and run `python3 main.py`. Don't forget to follow the instructions!
 
 ## FAQ
@@ -32,8 +32,8 @@ A: It's because I'm still bad at scripting in Python. If you want to improve the
 
 ## TODO
 
-[x] Working downloader
-[x] Continuable download
-[x] Fix download speed (use aria2c)
-[ ] Ability to move game data into your phone
-[ ] Ability to download different language pack
+- [x] Working downloader
+- [x] Continuable download
+- [x] Fix download speed (use aria2c)
+- [ ] Ability to move game data into your phone
+- [ ] Ability to download different language pack
