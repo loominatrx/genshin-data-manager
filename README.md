@@ -13,9 +13,9 @@ Please do your own research on how to install those prerequisities, as I do not 
 
 ## How to use
 
-- Clone this repository
-    `git clone https://github.com/Loominagit/genshin-data-manager`
-    or just download the source code from the website...
+- Clone this repository using one of the following methods:
+  - `git clone https://github.com/Loominagit/genshin-data-manager`,
+  - or [download the source directly from here](https://github.com/Loominagit/genshin-data-manager/archive/refs/heads/master.zip) and extract it somewhere.
 - `cd genshin-data-manager` and run `python3 main.py`. Don't forget to follow the instructions!
 
 ## FAQ
