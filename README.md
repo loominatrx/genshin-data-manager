@@ -5,7 +5,7 @@ This python script allows you to download and manage Genshin Impact's game data 
 ## Prerequisities
 
 - Any working device (Windows, Linux, or Android with terminal emulator; not sure with Mac)
-- 20 GB++ of empty space in your storage drive
+- 20 GB++ of empty space in your storage drive (both on your host and your phone)
 - Python 3.x+ (tested on Python 3.10)
 - android-platform-tools (adb)
 - aria2c
@@ -36,7 +36,7 @@ A: It's because I'm still bad at scripting in Python. If you want to improve the
 - [x] Working downloader
 - [x] Continuable download
 - [x] Fix download speed (use aria2c)
-- [ ] Ability to move game data into your phone
+- [x] Ability to move game data into your phone
 - [ ] Ability to download different language pack
 - [ ] In-place game files update
 - [ ] Possibly PC support...???

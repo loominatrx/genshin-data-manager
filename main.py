@@ -1,4 +1,5 @@
-from os import path, makedirs
+from os import path, makedirs, system, walk
+from os import name as os_name
 from sys import exit
 
 import subprocess
@@ -7,14 +8,14 @@ import re
 
 # text styles
 red = '\033[0;31m'
-cyan = '\033[0;36m'
-green = '\033[0;32m'
+cyan = '\u001b[0;36m'
+green = '\u001b[0;32m'
 bold = '\033[1m'
 reset = '\033[0m'
 
 # vars
 update_link = 'https://autopatchhk.yuanshen.com/' # update server
-genshin_data = '/sdcard/Android/Data/com.miHoYo.GenshinImpact/' # game files
+genshin_data = '/sdcard/Android/Data/com.miHoYo.GenshinImpact' # game files
 
 working_dir = path.dirname(__file__)
 
@@ -27,17 +28,37 @@ def error(str):
 def new_input(str):
     return input('{color}[?]: {reset}{str}{reset}'.format(color = green, reset = reset, str = str))
 
-def pull_files():
-    log('waiting for android device...')
+def question(str):
+    out = new_input(str + ' [y/n]: ')
+    if out.lower() == 'y':
+        return True
+    elif out.lower() == 'n':
+        return False
+    else:
+        error('Please input a valid response.')
+        exit(1)
+
+def choice(n, str):
+    print('{color}[{num}]: {reset}{str}{reset}'.format(num = n, color = green, reset = reset, str = str))
+
+def clear():
+    if os_name == 'posix': system('clear')
+    else: system('cls')
+
+def wait_for_android_device():
+    log('Waiting for android device...')
     subprocess.run(['adb', 'wait-for-device'], stdout=subprocess.DEVNULL)
 
-    log('checking for genshin folder...')
+def pull_files():
+    wait_for_android_device()
+
+    log('Checking for genshin folder...')
     result = subprocess.run(['adb', 'shell', 'cd ' + genshin_data + 'files'])
     if result.stderr:
         error('You didn\'t run perform a data download, don\'t you?\n   Please perform a data download, then exit the game.')
         exit(1)
     else:
-        log('found one!\n')
+        log('Found one!\n')
 
     log('fetching base_revision...')
     subprocess.run(['adb', 'pull', genshin_data + 'files/base_revision'], stdout=subprocess.DEVNULL)
@@ -50,11 +71,7 @@ def pull_files():
     log('fetching ScriptVersion...')
     subprocess.run(['adb', 'pull', genshin_data + 'files/ScriptVersion'], stdout=subprocess.DEVNULL)
 
-        
-if __name__ == '__main__':
-
-    # brief text
-    print('---------\nGenshin Mobile Data Downloader\n---------')
+def download_resources():
     print('You need to install Genshin Impact on your Android device and RUN it for the first time.')
     print('Run the game, sign in to your HoYoVerse account, perform a data download, then cancel it.')
     print('\nAfter that, close the game, and plug your USB in and make sure you enabled USB debugging in developer options. This is done to check required files to download.')
@@ -66,15 +83,12 @@ if __name__ == '__main__':
 
     print('')
     if path.exists(working_dir + '/base_revision') and path.exists(working_dir + '/audio_lang_14') and path.exists('data_versions_remote') and path.exists('res_versions_remote') and path.exists(working_dir + '/ScriptVersion'):
-        log('files used to check game version are found.')
-        response = new_input('do you want to use them instead? [y/n]: ')
-        if response.lower() == 'n': 
+        log('Files used to check game version are found.')
+        response = question('Do you want to use them instead?')
+        if response == False:
             pull_files()
-        elif response.lower() == 'y':
-            pass
         else:
-            error('please input a valid response.')
-            exit(1)
+            pass
     else:
         pull_files()
 
@@ -101,7 +115,7 @@ if __name__ == '__main__':
     )
 
     # convert res_versions_remote to readable dictionary
-    log('parsing res_versions_remote and data_versions_remote...')
+    log('Parsing res_versions_remote and data_versions_remote...')
     resources = []
     audio_resources = {
         'English(US)': [],
@@ -134,19 +148,19 @@ if __name__ == '__main__':
 
     # start download
     if not path.isdir('files'):
-        log('creating data directory...')
+        log('Creating data directory...')
         makedirs('files')
         makedirs('files/AssetBundles/blocks')
         makedirs('files/VideoAssets/Android')
         makedirs('files/AudioAssets/')
         
     else:
-        log('checking for updates...')
+        log('Checking for updates...')
 
         # TODO: do a checksum check from the information we've gathered
  
     print('')
-    log('performing resource download...')
+    log('Performing resource download...')
     for file in resources:
         suffix = ''
         if re.search('\\.blk$', file['remoteName']):
@@ -168,7 +182,7 @@ if __name__ == '__main__':
                 '--download-result=hide', '--continue=true', endpoint + suffix + file['remoteName']
             ])
 
-    log('downloading ' + genshin_audio_language + ' voice pack...') 
+    log('Downloading ' + genshin_audio_language + ' voice pack...') 
     for pck in audio_resources[genshin_audio_language]:
         filepath = 'files/AudioAssets/'+ pck['remoteName']
 
@@ -178,9 +192,91 @@ if __name__ == '__main__':
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
                 '--download-result=hide', '--continue=true', endpoint + 'AudioAssets/' + pck['remoteName']
             ])
-    log('done!')
+    
+    main_menu('Download done! Some files aren\'t downloaded due to the game server not storing the file, but this is enough to run the game!')
 
-    log('some files are not downloaded due to the game server not storing the files, but this is enough to get the game up and running!')
+def copy_resources():
+    copy_voice_pack = question('Do you want to copy voice packs?')
+    copy_cutscenes = question('Do you want to copy pre-rendered (video) cutscenes?')
+    
+    log('Do NOT UNPLUG or TURN OFF your device during this session!!!')
+    wait_for_android_device()
+
+    print('')
+    log('Fetching audio language...\n')
+    genshin_audio_language = open(working_dir + '/audio_lang_14', 'r').read()
+
+    log('Begin pushing!\n')
+    skipped_voice = False
+    skipped_cutscene = False
+    
+    for root, _, files in walk(working_dir + '/files/'):
+        if re.search('AudioAssets/' + genshin_audio_language + '^', root):
+            if not copy_voice_pack:
+                if not skipped_voice:
+                    log('Skipping voice pack...')
+                    skipped_voice = True
+
+                continue
+        if re.search('VideoAssets.+^', root):
+            if not copy_cutscenes:
+                if not skipped_cutscene:
+                    log('Skipping cutscenes...')
+                    skipped_cutscene = True
+                    
+                continue
+
+        # mkdir if the folder don't exist
+        subprocess.run(['adb', 'shell', 'mkdir', '-p', genshin_data + root.replace(working_dir, '')])
+        if len(files) > 0:
+            for file in files:
+                f = path.join(root, file)
+                dest = genshin_data + root.replace(working_dir, '') + '/' + file
+
+                log('Copying' + f + ' to ' + dest)
+                subprocess.run(['adb', 'push', f, dest])
+
+    main_menu('Game files copied to your phone! Enjoy genshin without staring at the login screen any longer!')
+
+def main_menu(custom_text='', greet_type='info' or 'error'):
+    clear()
+    print('---------\nGenshin Mobile Data Downloader\n---------')
+
+    print('')
+
+    if greet_type == 'info':
+        log(custom_text)
+    elif greet_type == 'error':
+        error(custom_text)
+
+    log('What do you want to do today?')
+
+    print('')
+
+    choice(1, 'Download game resources')
+    choice(2, 'Copy game resources to your phone')
+
+    print('')
+
+    choice(0, 'Exit the console app')
+
+    print('')
+
+    c = new_input('Your choice: ')
+
+    print('')
+
+    if c == '1':
+        download_resources()
+    elif c == '2':
+        copy_resources()
+    elif c == '0':
+        exit(0)
+    else:
+        main_menu('Invalid input.', 'error')
+
+if __name__ == '__main__':
+    main_menu('Welcome to genshin-data-manager!')
 else:
     print('Please do not import this file, run it with python instead.')
     print('python main.py')
