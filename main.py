@@ -156,7 +156,7 @@ if __name__ == '__main__':
         elif re.search('\\.pck$', file['remoteName']):
             suffix = 'AudioAssets/' 
 
-        filepath = working_dir + '/files/' + suffix + file['remoteName']
+        filepath = 'files/' + suffix + file['remoteName']
         if path.isfile(filepath) == False:
             dir = path.dirname(file['remoteName'])
             if dir != '':
@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     log('downloading ' + genshin_audio_language + ' voice pack...') 
     for pck in audio_resources[genshin_audio_language]:
-        filepath = working_dir + '/files/AudioAssets/'+ pck['remoteName']
+        filepath = 'files/AudioAssets/'+ pck['remoteName']
 
         if path.isfile(filepath) == False:
             subprocess.run(['aria2c',
