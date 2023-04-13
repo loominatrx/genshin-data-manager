@@ -176,7 +176,7 @@ if __name__ == '__main__':
             subprocess.run(['aria2c',
                 '--out=' + filepath,
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-                '--downloads-result=hide', '--continue=true', endpoint + 'AudioAssets/' + pck['remoteName']
+                '--download-result=hide', '--continue=true', endpoint + 'AudioAssets/' + pck['remoteName']
             ])
     log('done!')
 
