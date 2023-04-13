@@ -1,5 +1,5 @@
 # ignore genshin files
-files/*
+files
 
 # ignore version files
 base_revision
