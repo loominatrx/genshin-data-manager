@@ -163,7 +163,7 @@ if __name__ == '__main__':
                 makedirs('files/' + suffix + dir, 0o777, True)
             
             subprocess.run(['aria2c', 
-                '--out=' + filepath,
+                '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
                 '--download-result=hide', '--continue=true', endpoint + suffix + file['remoteName']
             ])
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
         if path.isfile(filepath) == False:
             subprocess.run(['aria2c',
-                '--out=' + filepath,
+                '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
                 '--download-result=hide', '--continue=true', endpoint + 'AudioAssets/' + pck['remoteName']
             ])
