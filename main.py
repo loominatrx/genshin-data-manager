@@ -49,7 +49,124 @@ def pull_files():
     util.log('fetching ScriptVersion...')
     subprocess.run(['adb', 'pull', genshin_data + '/files/ScriptVersion', game_version_file], stdout=subprocess.DEVNULL)
 
-def download_resources():
+def parse_resource(which_resource):
+    main_resources = []
+    voice_resources = {
+        'English(US)': [],
+        'Korean': [],
+        'Japanese': [],
+        'Chinese': []
+    }
+    video_resources = []
+
+    required_files_1 = open(main_data_file, 'r').read().split('\n')
+    # required_files_2 = open(additional_data_file, 'r').read().split('\n') # additional ~200MB file that don't work unfortunately
+
+    # separate them into lists
+    for file in required_files_1:
+        if file == '': continue
+        json_file = json.loads(file)
+        if util.is_voice_file(json_file['remoteName']) == 'English(US)' and which_resource == 'voice':
+            voice_resources['English(US)'].append(json_file)
+        elif util.is_voice_file(json_file['remoteName']) == 'Korean' and which_resource == 'voice':
+            voice_resources['Korean'].append(json_file)
+        elif util.is_voice_file(json_file['remoteName']) == 'Japanese' and which_resource == 'voice':
+            voice_resources['Japanese'].append(json_file)
+        elif util.is_voice_file(json_file['remoteName']) == 'Chinese' and which_resource == 'voice':
+            voice_resources['Chinese'].append(json_file)
+        elif util.is_cutscene_file(json_file['remoteName']) and which_resource == 'video':
+            video_resources.append(json_file)
+        elif util.is_asset_block_file(json_file['remoteName']) and which_resource == 'main':
+            main_resources.append(json_file)
+
+    
+    # for file in required_files_2:
+    #     if file == '': continue
+    #     json_file = json.loads(file)
+    #     resources.append(json_file)
+
+    
+    if which_resource == 'main':
+        return main_resources
+    elif which_resource == 'voice':
+        return voice_resources
+    elif which_resource == 'video':
+        return video_resources
+
+def download_main_assets(endpoint, resources, force_redownload):
+    util.log('Downloading main resources...')
+    for file in resources:
+        prefix = ''
+        if re.search('\.blk$', file['remoteName']):
+            prefix = 'AssetBundles/'
+        elif re.search('\.pck$', file['remoteName']):
+            prefix = 'AudioAssets/' 
+
+        filepath = 'files/' + prefix + file['remoteName']
+        if path.exists(filepath) == False or force_redownload == True:
+            dir = path.dirname(file['remoteName'])
+            if dir != '':
+                makedirs('files/' + prefix + dir, 0o777, True)
+            
+            subprocess.run(['aria2c', 
+                '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
+                '--max-concurrent-downloads=8', '--max-connection-per-server=8',
+                '--download-result=hide', '--continue=true', endpoint + prefix + file['remoteName']
+            ])
+
+def download_cutscene(endpoint, resources, force_redownload):
+    util.log('Downloading cutscenes...')
+    for video in resources:
+        filepath = 'files/VideoAssets/' + video['remoteName']
+        if path.exists(filepath) == False or force_redownload == True:
+            
+            subprocess.run(['aria2c', 
+                '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
+                '--max-concurrent-downloads=8', '--max-connection-per-server=8',
+                '--download-result=hide', '--continue=true', endpoint + 'VideoAssets/' + video['remoteName']
+            ])
+
+def download_voice(endpoint, resources, force_redownload, voice_language):
+    if voice_language == None:
+        voice_language = open(audio_file, 'r').read()
+        util.log('Using pulled audio_lang_14 file: ' + voice_language)
+    else:
+        util.log('Voice language overrided: ' + voice_language)
+    
+    util.log('Downloading ' + voice_language + ' voice pack...') 
+    for pck in resources[voice_language]:
+        filepath = 'files/AudioAssets/'+ pck['remoteName']
+
+        if path.exists(filepath) == False or force_redownload == True:
+            subprocess.run(['aria2c',
+                '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
+                '--max-concurrent-downloads=8', '--max-connection-per-server=8',
+                '--download-result=hide', '--continue=true', endpoint + 'AudioAssets/' + pck['remoteName']
+            ])
+
+def get_endpoint():
+    # read the file, then assign them in variables
+    base_rev = open(base_rev_file, 'r').read().split(' ')
+    genshin_version = open(game_version_file, 'r').read()
+    genshin_version_code = base_rev[0]
+    genshin_version_id = base_rev[1]
+    
+    # if the hotfix version is 0, use the 'major.minor' format instead of 'major.minor.hotfix'.
+    if genshin_version.split('.')[2] == '0':
+        __ver = genshin_version.split('.')
+        __ver.pop()
+        genshin_version = '.'.join(__ver)
+    
+    print('')
+    util.log('genshin-data-downloader is now downloading data for version {version}_{version_code}_{version_id}'.format(version = genshin_version,version_code = genshin_version_code,version_id = genshin_version_id))
+
+    return update_link + 'client_game_res/{version}_live/output_{version_code}_{version_id}/client/Android/'.format(
+        version = genshin_version,
+        version_code = genshin_version_code,
+        version_id = genshin_version_id
+    )
+
+def download_resources(download_bundles=True, download_voices=True, download_cutscenes=True, force_redownload=False):
     util.clear()
 
     header()
@@ -64,7 +181,17 @@ def download_resources():
 
     print('')
 
-    if path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file):
+    if force_redownload:
+        util.error('WARNING!')
+        print('You are attempting to force re-download the game data.')
+        print('ONLY use this if you want to update your game files!')
+        print('I am NOT responsible if one of your game files suddenly corrupted because of this.')
+
+        input('\nPress enter to continue or Ctrl+C to quit.')
+
+    print('')
+
+    if (path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file)) or force_redownload:
         util.log('Files used to check game version are found.')
         response = util.question('Do you want to use them instead?')
         if response == False:
@@ -74,106 +201,40 @@ def download_resources():
     else:
         pull_files()
 
-    # read the file, then assign them in variables
-    base_rev = open(base_rev_file, 'r').read().split(' ')
-    genshin_version = open(game_version_file, 'r').read()
-    genshin_audio_language = open(audio_file, 'r').read()
-    genshin_version_code = base_rev[0]
-    genshin_version_id = base_rev[1]
-    
-    # if the hotfix version is 0, use the 'major.minor' format instead of 'major.minor.hotfix'.
-    if genshin_version.split('.')[2] == '0':
-        __ver = genshin_version.split('.')
-        __ver.pop()
-        genshin_version = '.'.join(__ver)
-    
-    print('')
-    util.log('genshin-data-downloader is now downloading data for version {version}_{version_code}_{version_id}'.format(version = genshin_version,version_code = genshin_version_code,version_id = genshin_version_id))
-
-    endpoint = update_link + 'client_game_res/{version}_live/output_{version_code}_{version_id}/client/Android/'.format(
-        version = genshin_version,
-        version_code = genshin_version_code,
-        version_id = genshin_version_id
-    )
+    endpoint = get_endpoint()
 
     # convert res_versions_remote to readable dictionary
     util.log('Parsing res_versions_persist and data_versions_persist...')
-    resources = []
-    audio_resources = {
-        'English(US)': [],
-        'Korean': [],
-        'Japanese': [],
-        'Chinese': []
-    }
-
-    required_files_1 = open(main_data_file, 'r').read().split('\n')
-    # required_files_2 = open(additional_data_file, 'r').read().split('\n') # additional ~200MB file that don't work unfortunately
-
-    for file in required_files_1:
-        if file == '': continue
-        json_file = json.loads(file)
-        if re.search('^English\\(US\\)/.+\\.pck', json_file['remoteName']):
-            audio_resources['English(US)'].append(json_file)
-        elif re.search('^Korean/.+\\.pck', json_file['remoteName']):
-            audio_resources['Korean'].append(json_file)
-        elif re.search('^Japanese/.+\\.pck', json_file['remoteName']):
-            audio_resources['Japanese'].append(json_file)
-        elif re.search('^Chinese/.+\\.pck', json_file['remoteName']):
-            audio_resources['Chinese'].append(json_file)
-        else:
-            resources.append(json_file)
-
-    # for file in required_files_2:
-    #     if file == '': continue
-    #     json_file = json.loads(file)
-    #     resources.append(json_file)
-
     # start download
     if not path.isdir('files'):
         util.log('Creating data directory...')
-        makedirs('files')
-        makedirs('files/AssetBundles/blocks')
-        makedirs('files/VideoAssets/Android')
-        makedirs('files/AudioAssets/')
-        
-    else:
-        util.log('Checking for updates...')
+        makedirs('files', 0o777, True)
+        makedirs('files/AssetBundles/blocks', 0o777, True)
+        makedirs('files/VideoAssets/Android', 0o777, True)
+        makedirs('files/AudioAssets/', 0o777, True)
 
-        # TODO: do a checksum check from the information we've gathered
+    # TODO: do a checksum check from the information we've gathered
  
     print('')
     util.log('Performing resource download...')
-    for file in resources:
-        prefix = ''
-        if re.search('\.blk$', file['remoteName']):
-            prefix = 'AssetBundles/'
-        elif re.search('\.usm$', file['remoteName']) or re.search('\.cuepoint$', file['remoteName']):
-            prefix = 'VideoAssets/'
-        elif re.search('\.pck$', file['remoteName']):
-            prefix = 'AudioAssets/' 
+    if force_redownload: util.log('Force re-download: ENABLED')
+    if download_voices:
+        voice_resources = parse_resource('voice')
+        download_voice(endpoint, voice_resources, force_redownload)
+    else:
+        util.log('Skipping voice pack...')
 
-        filepath = 'files/' + prefix + file['remoteName']
-        if path.isfile(filepath) == False:
-            dir = path.dirname(file['remoteName'])
-            if dir != '':
-                makedirs('files/' + prefix + dir, 0o777, True)
-            
-            subprocess.run(['aria2c', 
-                '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
-                '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-                '--download-result=hide', '--continue=true', endpoint + prefix + file['remoteName']
-            ])
+    if download_bundles == True:
+        main_resources = parse_resource('main')
+        download_main_assets(endpoint, main_resources, force_redownload)
+    else:
+        util.log('Skipping main resources...')
 
-    util.log('Downloading ' + genshin_audio_language + ' voice pack...') 
-    for pck in audio_resources[genshin_audio_language]:
-        filepath = 'files/AudioAssets/'+ pck['remoteName']
-
-        if path.isfile(filepath) == False:
-            subprocess.run(['aria2c',
-                '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
-                '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-                '--download-result=hide', '--continue=true', endpoint + 'AudioAssets/' + pck['remoteName']
-            ])
+    if download_cutscenes:
+        video_resources = parse_resource('video')
+        download_cutscene(endpoint, video_resources, force_redownload)
+    else:
+        util.log('Skipping cutscenes...')
     
     main_menu('Download done! Some files aren\'t downloaded due to the game server not storing the file, but this is enough to run the game!')
 
@@ -196,12 +257,6 @@ def copy_resources():
     util.log('Do NOT UNPLUG or TURN OFF your device during this session!!!\n')
     util.log('Fetching audio language...')
     genshin_audio_language = open(audio_file, 'r').read()
-    lang_regex_match = ''
-
-    if genshin_audio_language == 'English(US)': # goddamn it parenthesis
-        lang_regex_match = 'English\(US\)'
-    else:
-        lang_regex_match = genshin_audio_language
 
     util.log('Begin pushing!\n')
     skipped_voice = False
@@ -217,7 +272,7 @@ def copy_resources():
                         util.log('Skipping cutscenes...')
                         skipped_cutscene = True
                     continue
-                elif re.search(lang_regex_match, root) and re.search('\.pck$', file) and copy_voice_pack == False:
+                elif re.search(re.escape(genshin_audio_language), root) and re.search('\.pck$', file) and copy_voice_pack == False:
                     if skipped_voice == False:
                         util.log('Skipping voice pack...')
                         skipped_voice = True
@@ -260,18 +315,16 @@ def main_menu(custom_text='', greet_type='info'):
     elif greet_type == 'error':
         util.error(custom_text)
 
-    util.log('What do you want to do today?')
-
-    print('')
+    util.log('What do you want to do today?\n')
 
     util.choice(1, 'Download game resources')
-    util.choice(2, 'Copy game resources to your phone')
+    util.choice(2, 'Force re-download game resources\n')
+    util.choice(3, 'Copy game resources to your phone\n')
+    util.choice(4, 'Download voice packs')
+    util.choice(5, 'Download specific game data\n')
 
-    print('')
     util.choice(9, 'About this app')
-    util.choice(0, 'Exit the console app')
-
-    print('')
+    util.choice(0, 'Exit the console app\n')
 
     c = util.new_input('Your choice: ')
 
@@ -280,7 +333,44 @@ def main_menu(custom_text='', greet_type='info'):
     if c == '1':
         download_resources()
     elif c == '2':
+        download_resources(force_redownload=True)
+    elif c == '3':
         copy_resources()
+    elif c == '4':
+        util.clear()
+        header()
+        util.log('Which voice language you want to download?\n')
+
+        util.choice(1, 'English (US)')
+        util.choice(2, 'Chinese')
+        util.choice(3, 'Korean')
+        util.choice(4, 'Japanese\n')
+
+        language = util.new_input('Your choice: ')
+
+        if language == '1':
+            language = 'English(US)'
+        elif language == '2':
+            language = 'Chinese'
+        elif language == '3':
+            language = 'Korean'
+        elif language == '4':
+            language = 'Japanese'
+        else:
+            util.log('Invalid choice.')
+            exit(0)
+        
+        download_voice(get_endpoint(), parse_resource('voice'), False, language)
+    elif c == '5':
+        util.clear()
+        header()
+        download_bundles = util.question('Do you want to download the main resources?')
+        download_voices = util.question('Do you want to download voice resources? (default language: ' + open(audio_file, 'r').read() + ')')
+        download_cutscenes = util.question('Do you want to download cutscenes?')
+        print('')
+        force_redownload = util.question('Do you want to force redownload all those assets?')
+
+        download_resources(download_bundles, download_voices, download_cutscenes, force_redownload)
     elif c == '9':
         about_page()
     elif c == '0':
