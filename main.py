@@ -93,7 +93,7 @@ def parse_resource(which_resource):
     elif which_resource == 'video':
         return video_resources
 
-def download_main_assets(endpoint, resources, force_redownload):
+def download_main_assets(endpoint, resources, force_update):
     util.log('Downloading main resources...')
     for file in resources:
         prefix = ''
@@ -103,7 +103,7 @@ def download_main_assets(endpoint, resources, force_redownload):
             prefix = 'AudioAssets/' 
 
         filepath = 'files/' + prefix + file['remoteName']
-        if path.exists(filepath) == False or force_redownload == True or path.exists(filepath + '.aria2') == True:
+        if path.exists(filepath) == False or force_update == True or path.exists(filepath + '.aria2') == True:
             dir = path.dirname(file['remoteName'])
             if dir != '':
                 makedirs('files/' + prefix + dir, 0o777, True)
@@ -115,11 +115,11 @@ def download_main_assets(endpoint, resources, force_redownload):
                 endpoint + prefix + file['remoteName']
             ])
 
-def download_cutscene(endpoint, resources, force_redownload):
+def download_cutscene(endpoint, resources, force_update):
     util.log('Downloading cutscenes...')
     for video in resources:
         filepath = 'files/VideoAssets/' + video['remoteName']
-        if path.exists(filepath) == False or force_redownload == True or path.exists(filepath + '.aria2') == True:
+        if path.exists(filepath) == False or force_update == True or path.exists(filepath + '.aria2') == True:
             
             subprocess.run(['aria2c', 
                 '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
@@ -128,7 +128,7 @@ def download_cutscene(endpoint, resources, force_redownload):
                 endpoint + 'VideoAssets/' + video['remoteName']
             ])
 
-def download_voice(endpoint, resources, force_redownload, voice_language):
+def download_voice(endpoint, resources, force_update, voice_language):
     if voice_language == None:
         voice_language = open(audio_file, 'r').read()
         util.log('Using pulled audio_lang_14 file: ' + voice_language)
@@ -139,7 +139,7 @@ def download_voice(endpoint, resources, force_redownload, voice_language):
     for pck in resources[voice_language]:
         filepath = 'files/AudioAssets/'+ pck['remoteName']
 
-        if path.exists(filepath) == False or force_redownload == True or path.exists(filepath + '.aria2') == True:
+        if path.exists(filepath) == False or force_update == True or path.exists(filepath + '.aria2') == True:
             subprocess.run(['aria2c',
                 '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
@@ -169,7 +169,7 @@ def get_endpoint():
         version_id = genshin_version_id
     )
 
-def download_resources(download_bundles=True, download_voices=True, download_cutscenes=True, force_redownload=False):
+def download_resources(download_bundles=True, download_voices=True, download_cutscenes=True, force_update=False):
     util.clear()
 
     header()
@@ -184,17 +184,18 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
 
     print('')
 
-    if force_redownload:
-        util.error('WARNING!')
-        print('You are attempting to force re-download the game data.')
-        print('ONLY use this if you want to update your game files!')
-        print('I am NOT responsible if one of your game files suddenly corrupted because of this.')
+    if force_update:
+        util.error(bold + 'WARNING!')
+        print('You are attempting to force update the game data.')
+        print('Force-update check each files\' integrity and download a new one if the file is considered old.')
+        print('Integrity check isn\'t enforced on normal download to prevent any slowdowns.\n')
+        print(bold + 'Only use this if you really want to update your game files!' + reset)
 
-        input('\nPress enter to continue or Ctrl+C to quit.')
+        input('\nPress enter to proceed or Ctrl+C to quit.')
 
     print('')
 
-    if (path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file)) or force_redownload:
+    if (path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file)) or force_update:
         util.log('Files used to check game version are found.')
         response = util.question('Do you want to use them instead?')
         if response == False:
@@ -220,22 +221,22 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
  
     print('')
     util.log('Performing resource download...')
-    if force_redownload: util.log('Force re-download: ENABLED')
+    if force_update: util.log('Force re-download: ENABLED')
     if download_voices:
         voice_resources = parse_resource('voice')
-        download_voice(endpoint, voice_resources, force_redownload)
+        download_voice(endpoint, voice_resources, force_update)
     else:
         util.log('Skipping voice pack...')
 
     if download_bundles == True:
         main_resources = parse_resource('main')
-        download_main_assets(endpoint, main_resources, force_redownload)
+        download_main_assets(endpoint, main_resources, force_update)
     else:
         util.log('Skipping main resources...')
 
     if download_cutscenes:
         video_resources = parse_resource('video')
-        download_cutscene(endpoint, video_resources, force_redownload)
+        download_cutscene(endpoint, video_resources, force_update)
     else:
         util.log('Skipping cutscenes...')
     
@@ -320,6 +321,7 @@ def download_voice_pack_prompt():
     util.choice(4, 'Japanese\n')
 
     language = util.new_input('Your choice: ')
+    force_update = util.question('Do you want to perform a force-update? Answer n if this is new download.')
 
     if language == '1':
         language = 'English(US)'
@@ -333,7 +335,9 @@ def download_voice_pack_prompt():
         util.log('Invalid choice.')
         exit(0)
     
-    download_voice(get_endpoint(), parse_resource('voice'), False, language)
+    download_voice(get_endpoint(), parse_resource('voice'), force_update, language)
+
+    main_menu(language + ' voice pack has been downloaded! Enjoy your favorite character in ' + language + '! :D')
 
 def main_menu(custom_text='', greet_type='info'):
     util.clear()
@@ -346,14 +350,16 @@ def main_menu(custom_text='', greet_type='info'):
 
     util.log('What do you want to do today?\n')
 
-    util.choice(1, 'Download game resources')
-    util.choice(2, 'Force re-download game resources\n')
+    util.choice(1, 'Download ALL game resources')
+    util.choice(2, 'Force-update ALL game resources\n')
     util.choice(3, 'Copy game resources to your phone\n')
     util.choice(4, 'Download voice packs')
     util.choice(5, 'Download specific game data\n')
 
     util.choice(9, 'About this app')
     util.choice(0, 'Exit the console app\n')
+
+    print('---\n')
 
     c = util.new_input('Your choice: ')
 
@@ -362,7 +368,7 @@ def main_menu(custom_text='', greet_type='info'):
     if c == '1':
         download_resources()
     elif c == '2':
-        download_resources(force_redownload=True)
+        download_resources(force_update=True)
     elif c == '3':
         copy_resources()
     elif c == '4':
@@ -374,9 +380,9 @@ def main_menu(custom_text='', greet_type='info'):
         download_voices = util.question('Do you want to download voice resources? (default language: ' + open(audio_file, 'r').read() + ')')
         download_cutscenes = util.question('Do you want to download cutscenes?')
         print('')
-        force_redownload = util.question('Do you want to force redownload all those assets?')
+        force_update = util.question('Do you want to force-update all those assets?')
 
-        download_resources(download_bundles, download_voices, download_cutscenes, force_redownload)
+        download_resources(download_bundles, download_voices, download_cutscenes, force_update)
     elif c == '9':
         about_page()
     elif c == '0':
