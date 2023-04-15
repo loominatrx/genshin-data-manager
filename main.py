@@ -171,11 +171,11 @@ def get_endpoint():
 
 def download_resources(download_bundles=True, download_voices=True, download_cutscenes=True, force_update=False):
     util.clear()
-
     header()
+
     print('You need to install Genshin Impact on your Android device and RUN it for the first time.')
     print('Run the game, sign in to your HoYoVerse account, perform a data download, then cancel it.')
-    print('\nAfter that, close the game, and plug your USB in and make sure you enabled USB debugging in developer options. This is done to check required files to download.')
+    print('\nAfter that, close the game, and plug your USB in and make sure you enabled USB debugging in developer options.\nThis is done to check required files to download.')
     print(bold + 'Also, keep in mind that this will only work if you have an Android device!!!' + reset)
 
     input('\nPress enter to continue or Ctrl+C to quit.')
@@ -185,9 +185,12 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
     print('')
 
     if force_update:
+        util.clear()
+        header()
+
         util.error(bold + 'WARNING!')
         print('You are attempting to force update the game data.')
-        print('Force-update check each files\' integrity and download a new one if the file is considered old.')
+        print('Force-update checks every file\'s integrity and download a new one if the file is considered old.')
         print('Integrity check isn\'t enforced on normal download to prevent any slowdowns.\n')
         print(bold + 'Only use this if you really want to update your game files!' + reset)
 
