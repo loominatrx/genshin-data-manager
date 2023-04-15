@@ -19,6 +19,16 @@ Please do your own research on how to install those prerequisities, as I do not 
   - or [download the source directly from here](https://github.com/Loominagit/genshin-data-manager/archive/refs/heads/master.zip) and extract it somewhere.
 - `cd genshin-data-manager` and run `python3 main.py`. Don't forget to follow the instructions!
 
+## Features
+
+This thing can almost do anything that you imagine! This thing can:
+
+- Download _almost_ all required game data to run Genshin (yeah, almost... since some of the files are not found on their server. Blame HoYoVerse for this.),
+- Download different voice pakcs,
+- Download specific game resources (whether it's the asset bundles, voice packs, or cutscenes),
+- Update the game files directly without removing them (use force-redownload to achieve this),
+- Last, but not least: Copy ALL the game files to your Android phone!
+
 ## FAQ
 
 Q: How did you found out the server link?
@@ -31,13 +41,13 @@ Q: Why is the script so poorly written?
 
 A: It's because I'm still bad at scripting in Python. If you want to improve the script's performance, you can make a good pull request, so I can merge it into the main repo!
 
+
+
+Q: Why didn't you separate asset bundles and audio files (sounds & musics)?
+
+A: Because I (and probably you) don't want to. There is no way you can enjoy the game only by the visuals.
+
 ## TODO
 
-- [x] Working downloader
-- [x] Continuable download
-- [x] Fix download speed (use aria2c)
-- [x] Ability to move game data into your phone
-- [ ] Android support
-- [ ] Ability to download different language pack
-- [ ] In-place game files update
+- [ ] Python for Android support
 - [ ] Possibly Genshin PC support...???
