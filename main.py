@@ -8,9 +8,6 @@ import json
 import re
 
 # text styles
-red = '\033[0;31m'
-cyan = '\u001b[0;36m'
-green = '\u001b[0;32m'
 bold = '\033[1m'
 reset = '\033[0m'
 
@@ -26,6 +23,9 @@ audio_file = path.join(working_dir, 'audio_lang_14')
 main_data_file = path.join(working_dir, 'res_versions_persist')
 additional_data_file = path.join(working_dir, 'data_versions_persist')
 game_version_file = path.join(working_dir, 'ScriptVersion')
+
+def header():
+    print('---------\nGenshin Mobile Data Downloader\n---------\n')
 
 def pull_files():
     util.wait_for_android_device()
@@ -50,12 +50,15 @@ def pull_files():
     subprocess.run(['adb', 'pull', genshin_data + '/files/ScriptVersion', game_version_file], stdout=subprocess.DEVNULL)
 
 def download_resources():
+    util.clear()
+
+    header()
     print('You need to install Genshin Impact on your Android device and RUN it for the first time.')
     print('Run the game, sign in to your HoYoVerse account, perform a data download, then cancel it.')
     print('\nAfter that, close the game, and plug your USB in and make sure you enabled USB debugging in developer options. This is done to check required files to download.')
     print(bold + 'Also, keep in mind that this will only work if you have an Android device!!!' + reset)
 
-    input('\nPress enter to continue.')
+    input('\nPress enter to continue or Ctrl+C to quit.')
 
     #######
 
@@ -175,14 +178,23 @@ def download_resources():
     main_menu('Download done! Some files aren\'t downloaded due to the game server not storing the file, but this is enough to run the game!')
 
 def copy_resources():
+    util.clear()
+    header()
+
+    print('Before copying the game data to your phone, make sure you have enough storage')
+    print('on your phone. genshin-data-manager will fail to copy the game data and spamming you errors')
+    print('on the console if you don\'t do so.\n')
+
+    input('Press enter to proceed or Ctrl+C to quit.')
+    print('')
+
+    util.wait_for_android_device()
+    util.log('Android device detected!')
     copy_voice_pack = util.question('Do you want to copy voice packs?')
     copy_cutscenes = util.question('Do you want to copy pre-rendered (video) cutscenes?')
     
-    util.log('Do NOT UNPLUG or TURN OFF your device during this session!!!')
-    util.wait_for_android_device()
-
-    print('')
-    util.log('Fetching audio language...\n')
+    util.log('Do NOT UNPLUG or TURN OFF your device during this session!!!\n')
+    util.log('Fetching audio language...')
     genshin_audio_language = open(audio_file, 'r').read()
     lang_regex_match = ''
 
@@ -219,11 +231,29 @@ def copy_resources():
 
     main_menu('Game files copied to your phone! Enjoy genshin without staring at the login screen any longer!')
 
-def main_menu(custom_text='', greet_type='info' or 'error'):
+def about_page():
     util.clear()
-    print('---------\nGenshin Mobile Data Downloader\nCopyright (C) 2023 - loominatrx\n---------')
+    header()
 
-    print('')
+    print('Quoting from the repo:')
+    print('This python script allows you to download and manage Genshin Impact\'s game data in your PC!\n')
+    print('You can use this to quickly restore the game data in case you accidentally delete the game data\nand don\'t want to spend hours on redownloading 20GB+ worth of data.\n')
+    print('Currently, it only supports full data download (not selective download) and\ncopying ALL required game data to your Android phone.')
+    print('You can choose not to copy the voice audio and/or the video cutscene, but it will ruin your experience\nif you don\'t know what you\'re doing.\n')
+
+    # free software notice
+    print('----------\n')
+    print('genshin-data-manager  Copyright (C) 2023  loominatrx/loominagit')
+    print('This program comes with ABSOLUTELY NO WARRANTY.')
+    print('This is free software, and you are welcome to redistribute it')
+    print('under certain conditions.')
+
+    input('\nPress enter to go back to main menu.')
+    main_menu('Welcome to genshin-data-manager!')
+
+def main_menu(custom_text='', greet_type='info'):
+    util.clear()
+    header()
 
     if greet_type == 'info':
         util.log(custom_text)
@@ -238,7 +268,7 @@ def main_menu(custom_text='', greet_type='info' or 'error'):
     util.choice(2, 'Copy game resources to your phone')
 
     print('')
-
+    util.choice(9, 'About this app')
     util.choice(0, 'Exit the console app')
 
     print('')
@@ -251,6 +281,8 @@ def main_menu(custom_text='', greet_type='info' or 'error'):
         download_resources()
     elif c == '2':
         copy_resources()
+    elif c == '9':
+        about_page()
     elif c == '0':
         util.log('See you next time!')
         exit(0)
