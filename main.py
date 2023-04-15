@@ -97,7 +97,7 @@ def download_resources():
     )
 
     # convert res_versions_remote to readable dictionary
-    util.log('Parsing res_versions_remote and data_versions_remote...')
+    util.log('Parsing res_versions_persist and data_versions_persist...')
     resources = []
     audio_resources = {
         'English(US)': [],
