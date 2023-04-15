@@ -198,7 +198,7 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
 
     print('')
 
-    if (path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file)) or force_update:
+    if (path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file)) or force_update == False:
         util.log('Files used to check game version are found.')
         response = util.question('Do you want to use them instead?')
         if response == False:
