@@ -221,7 +221,7 @@ def copy_resources():
 
 def main_menu(custom_text='', greet_type='info' or 'error'):
     util.clear()
-    print('---------\nGenshin Mobile Data Downloader\n---------')
+    print('---------\nGenshin Mobile Data Downloader\nCopyright (C) 2023 - loominatrx\n---------')
 
     print('')
 
