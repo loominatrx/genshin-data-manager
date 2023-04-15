@@ -198,16 +198,17 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
 
     print('')
 
-    if (path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file)) or force_update == False:
-        util.log('Files used to check game version are found.')
-        response = util.question('Do you want to use them instead?')
-        if response == False:
-            pull_files()
-        else:
-            pass
-    else:
-        pull_files()
+    if force_update == False:
+        if (path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file)):
+            util.log('Files used to check game version are found.')
+            response = util.question('Do you want to use them instead?')
+            if response == False:
+                pull_files()
+            else:
+                pass
 
+    pull_files()
+    
     endpoint = get_endpoint()
 
     # convert res_versions_remote to readable dictionary
