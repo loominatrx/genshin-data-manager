@@ -19,6 +19,13 @@ genshin_data = '/sdcard/Android/Data/com.miHoYo.GenshinImpact' # game files
 
 working_dir = path.dirname(__file__)
 
+# files
+base_rev_file = path.join(working_dir, 'base_revision')
+audio_file = path.join(working_dir, 'audio_lang_14')
+main_data_file = path.join(working_dir, 'res_versions_persist')
+additional_data_file = path.join(working_dir, 'data_versions_persist')
+game_version_file = path.join(working_dir, 'ScriptVersion')
+
 def log(str):
     print('{color}[i]: {reset}{str}{reset}'.format(color = cyan, reset = reset, str = str))
 
@@ -53,7 +60,7 @@ def pull_files():
     wait_for_android_device()
 
     log('Checking for genshin folder...')
-    result = subprocess.run(['adb', 'shell', 'cd ' + genshin_data + 'files'])
+    result = subprocess.run(['adb', 'shell', 'cd ' + genshin_data + '/files'])
     if result.stderr:
         error('You didn\'t run perform a data download, don\'t you?\n   Please perform a data download, then exit the game.')
         exit(1)
@@ -61,15 +68,15 @@ def pull_files():
         log('Found one!\n')
 
     log('fetching base_revision...')
-    subprocess.run(['adb', 'pull', genshin_data + 'files/base_revision'], stdout=subprocess.DEVNULL)
+    subprocess.run(['adb', 'pull', genshin_data + '/files/base_revision', base_rev_file], stdout=subprocess.DEVNULL)
     log('fetching audio_lang_14...')
-    subprocess.run(['adb', 'pull', genshin_data + 'files/audio_lang_14'], stdout=subprocess.DEVNULL)
-    log('fetching data_versions_remote...')
-    subprocess.run(['adb', 'pull', genshin_data + 'files/data_versions_remote'], stdout=subprocess.DEVNULL)
-    log('fetching res_versions_remote...')
-    subprocess.run(['adb', 'pull', genshin_data + 'files/res_versions_remote'], stdout=subprocess.DEVNULL)
+    subprocess.run(['adb', 'pull', genshin_data + '/files/audio_lang_14', audio_file], stdout=subprocess.DEVNULL)
+    log('fetching data_versions_persist...')
+    subprocess.run(['adb', 'pull', genshin_data + '/files/data_versions_persist', additional_data_file], stdout=subprocess.DEVNULL)
+    log('fetching res_versions_persist...')
+    subprocess.run(['adb', 'pull', genshin_data + '/files/res_versions_persist', main_data_file], stdout=subprocess.DEVNULL)
     log('fetching ScriptVersion...')
-    subprocess.run(['adb', 'pull', genshin_data + 'files/ScriptVersion'], stdout=subprocess.DEVNULL)
+    subprocess.run(['adb', 'pull', genshin_data + '/files/ScriptVersion', game_version_file], stdout=subprocess.DEVNULL)
 
 def download_resources():
     print('You need to install Genshin Impact on your Android device and RUN it for the first time.')
@@ -82,7 +89,8 @@ def download_resources():
     #######
 
     print('')
-    if path.exists(working_dir + '/base_revision') and path.exists(working_dir + '/audio_lang_14') and path.exists('data_versions_remote') and path.exists('res_versions_remote') and path.exists(working_dir + '/ScriptVersion'):
+
+    if path.exists(base_rev_file) and path.exists(audio_file) and path.exists(additional_data_file) and path.exists(main_data_file) and path.exists(game_version_file):
         log('Files used to check game version are found.')
         response = question('Do you want to use them instead?')
         if response == False:
@@ -93,9 +101,9 @@ def download_resources():
         pull_files()
 
     # read the file, then assign them in variables
-    base_rev = open(working_dir + '/base_revision', 'r').read().split(' ')
-    genshin_version = open(working_dir + '/ScriptVersion', 'r').read()
-    genshin_audio_language = open(working_dir + '/audio_lang_14', 'r').read()
+    base_rev = open(base_rev_file, 'r').read().split(' ')
+    genshin_version = open(game_version_file, 'r').read()
+    genshin_audio_language = open(audio_file, 'r').read()
     genshin_version_code = base_rev[0]
     genshin_version_id = base_rev[1]
     
@@ -124,8 +132,8 @@ def download_resources():
         'Chinese': []
     }
 
-    required_files_1 = open(working_dir + '/res_versions_remote', 'r').read().split('\n')
-    # required_files_2 = open(working_dir + '/data_versions_remote', 'r').read().split('\n')
+    required_files_1 = open(main_data_file, 'r').read().split('\n')
+    # required_files_2 = open(additional_data_file, 'r').read().split('\n') # additional ~200MB file that don't work unfortunately
 
     for file in required_files_1:
         if file == '': continue
