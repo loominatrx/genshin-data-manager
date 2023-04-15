@@ -6,4 +6,6 @@ base_revision
 audio_lang_14
 data_versions_remote
 res_versions_remote
+data_versions_persist
+res_versions_persist
 ScriptVersion
