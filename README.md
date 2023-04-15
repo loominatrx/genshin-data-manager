@@ -40,4 +40,4 @@ A: It's because I'm still bad at scripting in Python. If you want to improve the
 - [ ] Android support
 - [ ] Ability to download different language pack
 - [ ] In-place game files update
-- [ ] Possibly PC support...???
+- [ ] Possibly Genshin PC support...???
