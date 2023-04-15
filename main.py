@@ -76,7 +76,7 @@ def parse_resource(which_resource):
             voice_resources['Chinese'].append(json_file)
         elif util.is_cutscene_file(json_file['remoteName']) and which_resource == 'video':
             video_resources.append(json_file)
-        elif util.is_asset_block_file(json_file['remoteName']) and which_resource == 'main':
+        elif (util.is_asset_block_file(json_file['remoteName']) or (util.is_voice_file(json_file['remoteName']) == None and util.is_audio_file(json_file['remoteName']))) and which_resource == 'main':
             main_resources.append(json_file)
 
     
@@ -103,7 +103,7 @@ def download_main_assets(endpoint, resources, force_redownload):
             prefix = 'AudioAssets/' 
 
         filepath = 'files/' + prefix + file['remoteName']
-        if path.exists(filepath) == False or force_redownload == True:
+        if path.exists(filepath) == False or force_redownload == True or path.exists(filepath + '.aria2') == True:
             dir = path.dirname(file['remoteName'])
             if dir != '':
                 makedirs('files/' + prefix + dir, 0o777, True)
@@ -111,19 +111,21 @@ def download_main_assets(endpoint, resources, force_redownload):
             subprocess.run(['aria2c', 
                 '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-                '--download-result=hide', '--continue=true', endpoint + prefix + file['remoteName']
+                '--download-result=hide', '--continue=true', '--check-integrity=true', '--checksum=md5=' + file['md5'],
+                endpoint + prefix + file['remoteName']
             ])
 
 def download_cutscene(endpoint, resources, force_redownload):
     util.log('Downloading cutscenes...')
     for video in resources:
         filepath = 'files/VideoAssets/' + video['remoteName']
-        if path.exists(filepath) == False or force_redownload == True:
+        if path.exists(filepath) == False or force_redownload == True or path.exists(filepath + '.aria2') == True:
             
             subprocess.run(['aria2c', 
                 '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-                '--download-result=hide', '--continue=true', endpoint + 'VideoAssets/' + video['remoteName']
+                '--download-result=hide', '--continue=true', '--check-integrity=true', '--checksum=md5=' + video['md5'],
+                endpoint + 'VideoAssets/' + video['remoteName']
             ])
 
 def download_voice(endpoint, resources, force_redownload, voice_language):
@@ -131,17 +133,18 @@ def download_voice(endpoint, resources, force_redownload, voice_language):
         voice_language = open(audio_file, 'r').read()
         util.log('Using pulled audio_lang_14 file: ' + voice_language)
     else:
-        util.log('Voice language overrided: ' + voice_language)
+        util.log('Voice language overriden: ' + voice_language)
     
     util.log('Downloading ' + voice_language + ' voice pack...') 
     for pck in resources[voice_language]:
         filepath = 'files/AudioAssets/'+ pck['remoteName']
 
-        if path.exists(filepath) == False or force_redownload == True:
+        if path.exists(filepath) == False or force_redownload == True or path.exists(filepath + '.aria2') == True:
             subprocess.run(['aria2c',
                 '--out=' + filepath, '--file-allocation=prealloc', '--dir=' + working_dir,
                 '--max-concurrent-downloads=8', '--max-connection-per-server=8',
-                '--download-result=hide', '--continue=true', endpoint + 'AudioAssets/' + pck['remoteName']
+                '--download-result=hide', '--continue=true', '--check-integrity=true', '--checksum=md5=' + pck['md5'],
+                endpoint + 'AudioAssets/' + pck['remoteName']
             ])
 
 def get_endpoint():
@@ -306,6 +309,32 @@ def about_page():
     input('\nPress enter to go back to main menu.')
     main_menu('Welcome to genshin-data-manager!')
 
+def download_voice_pack_prompt():
+    util.clear()
+    header()
+    util.log('Which voice language you want to download?\n')
+
+    util.choice(1, 'English (US)')
+    util.choice(2, 'Chinese')
+    util.choice(3, 'Korean')
+    util.choice(4, 'Japanese\n')
+
+    language = util.new_input('Your choice: ')
+
+    if language == '1':
+        language = 'English(US)'
+    elif language == '2':
+        language = 'Chinese'
+    elif language == '3':
+        language = 'Korean'
+    elif language == '4':
+        language = 'Japanese'
+    else:
+        util.log('Invalid choice.')
+        exit(0)
+    
+    download_voice(get_endpoint(), parse_resource('voice'), False, language)
+
 def main_menu(custom_text='', greet_type='info'):
     util.clear()
     header()
@@ -337,30 +366,7 @@ def main_menu(custom_text='', greet_type='info'):
     elif c == '3':
         copy_resources()
     elif c == '4':
-        util.clear()
-        header()
-        util.log('Which voice language you want to download?\n')
-
-        util.choice(1, 'English (US)')
-        util.choice(2, 'Chinese')
-        util.choice(3, 'Korean')
-        util.choice(4, 'Japanese\n')
-
-        language = util.new_input('Your choice: ')
-
-        if language == '1':
-            language = 'English(US)'
-        elif language == '2':
-            language = 'Chinese'
-        elif language == '3':
-            language = 'Korean'
-        elif language == '4':
-            language = 'Japanese'
-        else:
-            util.log('Invalid choice.')
-            exit(0)
-        
-        download_voice(get_endpoint(), parse_resource('voice'), False, language)
+        download_voice_pack_prompt()
     elif c == '5':
         util.clear()
         header()
