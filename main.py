@@ -339,9 +339,7 @@ def copy_resources():
                 util.log('Copying ' + f + ' to ' + dest)
                 subprocess.run(['adb', 'push', f, dest])
 
-                
-
-    # main_menu('Game files copied to your phone! Enjoy genshin without staring at the login screen any longer!')
+    main_menu('Game files copied to your phone! Enjoy genshin without staring at the login screen any longer!')
 
 def about_page():
     util.clear()
