@@ -25,7 +25,7 @@ additional_data_file = path.join(working_dir, 'data_versions_persist')
 game_version_file = path.join(working_dir, 'ScriptVersion')
 
 def header():
-    print('---------\nGenshin Mobile Data Downloader\n---------\n')
+    print('---------\nGenshin Impact for Android Data Manager\n---------\n')
 
 def pull_files():
     util.wait_for_android_device()
