@@ -128,15 +128,15 @@ def download_cutscene(endpoint, resources, force_update):
                 endpoint + 'VideoAssets/' + video['remoteName']
             ])
 
-def download_voice(endpoint, resources, force_update, voice_language):
-    if voice_language == None:
-        voice_language = open(audio_file, 'r').read()
-        util.log('Using pulled audio_lang_14 file: ' + voice_language)
+def download_voice(endpoint, resources, force_update, voice_pack):
+    if voice_pack == None:
+        voice_pack = open(audio_file, 'r').read()
+        util.log('Using pulled audio_lang_14 file: ' + voice_pack)
     else:
-        util.log('Voice language overriden: ' + voice_language)
+        util.log('Voice pack overriden: ' + voice_pack)
     
-    util.log('Downloading ' + voice_language + ' voice pack...') 
-    for pck in resources[voice_language]:
+    util.log('Downloading ' + voice_pack + ' voice pack...') 
+    for pck in resources[voice_pack]:
         filepath = 'files/AudioAssets/'+ pck['remoteName']
 
         if path.exists(filepath) == False or force_update == True or path.exists(filepath + '.aria2') == True:
@@ -208,7 +208,7 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
                 pass
 
     pull_files()
-    
+
     endpoint = get_endpoint()
 
     # convert res_versions_remote to readable dictionary
@@ -257,42 +257,91 @@ def copy_resources():
     input('Press enter to proceed or Ctrl+C to quit.')
     print('')
 
+    genshin_audio_pack = open(audio_file, 'r').read()
+
     util.wait_for_android_device()
     util.log('Android device detected!')
+    copy_main_assets = util.question('Do you want to the asset bundles (main game files)?')
     copy_voice_pack = util.question('Do you want to copy voice packs?')
+
+    if copy_voice_pack == True:
+        print('')
+        util.log('Which voice pack(s) do you want to copy?')
+        util.log('If didn\'t exist, it will default to ' + genshin_audio_pack + '.\n')
+        util.choice(1, 'English (US)')
+        util.choice(2, 'Chinese')
+        util.choice(3, 'Korean')
+        util.choice(4, 'Japanese\n')
+        audio_pack = util.new_input('Which packs: ')
+
+        if audio_pack == '1':
+            genshin_audio_pack = 'English(US)'
+        elif audio_pack == '2':
+            genshin_audio_pack = 'Chinese'
+        elif audio_pack == '3':
+            genshin_audio_pack = 'Korean'
+        elif audio_pack == '4':
+            genshin_audio_pack = 'Japanese'
+        else:
+            print('')
+            util.log('Invalid choice.')
+            exit(0)
+
     copy_cutscenes = util.question('Do you want to copy pre-rendered (video) cutscenes?')
-    
+    print('')
     util.log('Do NOT UNPLUG or TURN OFF your device during this session!!!\n')
-    util.log('Fetching audio language...')
-    genshin_audio_language = open(audio_file, 'r').read()
+    util.log('Fetching audio pack...')
+
+    if path.exists(path.join(working_dir, 'files', 'AudioAssets', genshin_audio_pack)) == None:
+        genshin_audio_pack = open(audio_file, 'r').read()
+        util.log('Voice pack is not present, defaulting to ' + genshin_audio_pack)
+
+    if genshin_audio_pack == 'English(US)':
+        escaped_lang_str = 'English\(US\)'
+    else:
+        escaped_lang_str = genshin_audio_pack
+
 
     util.log('Begin pushing!\n')
+    skipped_bundles = False
     skipped_voice = False
     skipped_cutscene = False
     
     for root, _, files in walk(path.join(working_dir, 'files')):
-        # mkdir if the folder don't exist
-        subprocess.run(['adb', 'shell', 'mkdir', '-p', genshin_data + root.replace(working_dir, '').replace('\\', '/') + '/'])
         if len(files) > 0:
+            # mkdir if the folder don't exist
+            subprocess.run(['adb', 'shell', 'mkdir', '-p', genshin_data + re.escape(root.replace(working_dir, '').replace('\\', '/')) + '/'])
             for file in files:
-                if (re.search('\.usm$', file) or re.search('\.cuepoint$', file)) and copy_cutscenes == False:
+                if (util.is_cutscene_file(file)) and copy_cutscenes == False:
                     if skipped_cutscene == False:
                         util.log('Skipping cutscenes...')
                         skipped_cutscene = True
                     continue
-                elif re.search(re.escape(genshin_audio_language), root) and re.search('\.pck$', file) and copy_voice_pack == False:
+                elif re.search(escaped_lang_str, root) and util.is_audio_file(file) and copy_voice_pack == False:
                     if skipped_voice == False:
                         util.log('Skipping voice pack...')
                         skipped_voice = True
                     continue
-
+                elif util.is_asset_block_file(file) == True and copy_main_assets == False:
+                    if skipped_bundles == False:
+                        util.log('Skipping main files...')
+                        skipped_bundles = True
+                    continue
+                elif util.is_audio_file(file) and re.search(escaped_lang_str, root) == None and copy_main_assets == False:
+                    if skipped_bundles == False:
+                        util.log('Skipping main files...')
+                        skipped_bundles = True
+                    continue
+                
                 f = path.join(root, file)
                 dest = genshin_data + root.replace(working_dir, '').replace('\\', '/') + '/' + file
                 
                 util.log('Copying ' + f + ' to ' + dest)
                 subprocess.run(['adb', 'push', f, dest])
 
-    main_menu('Game files copied to your phone! Enjoy genshin without staring at the login screen any longer!')
+                
+
+    # main_menu('Game files copied to your phone! Enjoy genshin without staring at the login screen any longer!')
 
 def about_page():
     util.clear()
@@ -317,31 +366,31 @@ def about_page():
 def download_voice_pack_prompt():
     util.clear()
     header()
-    util.log('Which voice language you want to download?\n')
+    util.log('Which voice pack you want to download?\n')
 
     util.choice(1, 'English (US)')
     util.choice(2, 'Chinese')
     util.choice(3, 'Korean')
     util.choice(4, 'Japanese\n')
 
-    language = util.new_input('Your choice: ')
+    pack = util.new_input('Your choice: ')
     force_update = util.question('Do you want to perform a force-update? Answer n if this is new download.')
 
-    if language == '1':
-        language = 'English(US)'
-    elif language == '2':
-        language = 'Chinese'
-    elif language == '3':
-        language = 'Korean'
-    elif language == '4':
-        language = 'Japanese'
+    if pack == '1':
+        pack = 'English(US)'
+    elif pack == '2':
+        pack = 'Chinese'
+    elif pack == '3':
+        pack = 'Korean'
+    elif pack == '4':
+        pack = 'Japanese'
     else:
         util.log('Invalid choice.')
         exit(0)
     
-    download_voice(get_endpoint(), parse_resource('voice'), force_update, language)
+    download_voice(get_endpoint(), parse_resource('voice'), force_update, pack)
 
-    main_menu(language + ' voice pack has been downloaded! Enjoy your favorite character in ' + language + '! :D')
+    main_menu(pack + ' voice pack has been downloaded! Enjoy your favorite character in ' + pack + '! :D')
 
 def main_menu(custom_text='', greet_type='info'):
     util.clear()
@@ -381,7 +430,7 @@ def main_menu(custom_text='', greet_type='info'):
         util.clear()
         header()
         download_bundles = util.question('Do you want to download the main resources?')
-        download_voices = util.question('Do you want to download voice resources? (default language: ' + open(audio_file, 'r').read() + ')')
+        download_voices = util.question('Do you want to download voice resources? (default pack: ' + open(audio_file, 'r').read() + ')')
         download_cutscenes = util.question('Do you want to download cutscenes?')
         print('')
         force_update = util.question('Do you want to force-update all those assets?')
