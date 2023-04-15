@@ -1,3 +1,6 @@
+# ignore python shinenigans
+__pycache__
+
 # ignore genshin files
 files
 
