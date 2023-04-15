@@ -26,7 +26,7 @@ This thing can almost do anything that you imagine! This thing can:
 - Download _almost_ all required game data to run Genshin (yeah, almost... since some of the files are not found on their server. Blame HoYoVerse for this.),
 - Download different voice pakcs,
 - Download specific game resources (whether it's the asset bundles, voice packs, or cutscenes),
-- Update the game files directly without removing them (use force-redownload to achieve this),
+- Update the game files directly without removing them (use force-update to achieve this),
 - Last, but not least: Copy ALL the game files to your Android phone!
 
 ## FAQ
@@ -46,6 +46,12 @@ A: It's because I'm still bad at scripting in Python. If you want to improve the
 Q: Why didn't you separate asset bundles and audio files (sounds & musics)?
 
 A: Because I (and probably you) don't want to. There is no way you can enjoy the game only by the visuals.
+
+
+
+Q: Why didn't you do integrity check on normal download?
+
+A: I didn't do this to prevent any slowdown while downloading. Therefore, you can always enforce integrity check by force-updating!
 
 ## TODO
 
