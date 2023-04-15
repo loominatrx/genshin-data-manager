@@ -1,4 +1,6 @@
 from os import system, name
+from re import search
+
 import subprocess
 
 # text styles
@@ -37,3 +39,23 @@ def clear():
 def wait_for_android_device():
     log('Waiting for android device...')
     subprocess.run(['adb', 'wait-for-device'], stdout=subprocess.DEVNULL)
+
+def is_audio_file(filename):
+    return search('\.pck$', filename) != None
+
+def is_asset_block_file(filename):
+    return search('\.blk$', filename) != None
+
+def is_voice_file(filename):
+    if search('^English\\(US\\)/.+\.pck', filename) != None:
+        return 'English(US)'
+    elif search('^Chinese/.+\.pck', filename) != None:
+        return 'Chinese'
+    elif search('^Korean/.+\.pck', filename) != None:
+        return 'Korean'
+    elif search('^Japanese/.+\.pck', filename) != None:
+        return 'Japanese'
+
+def is_cutscene_file(filename):
+    return search('\.usm$', filename) != None or search('\.cuepoint$', filename) != None
+
