@@ -33,7 +33,7 @@ def pull_files():
     util.log('Checking for genshin folder...')
     result = subprocess.run(['adb', 'shell', 'cd ' + genshin_data + '/files'])
     if result.stderr:
-        util.error('You didn\'t run perform a data download, don\'t you?\n   Please perform a data download, then exit the game.')
+        util.error('You didn\'t run a data download, don\'t you?\n   Please perform a data download, then exit the game.')
         exit(1)
     else:
         util.log('Found one!\n')
