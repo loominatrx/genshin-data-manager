@@ -292,7 +292,7 @@ def copy_resources():
     util.log('Do NOT UNPLUG or TURN OFF your device during this session!!!\n')
     util.log('Fetching audio pack...')
 
-    if path.exists(path.join(working_dir, 'files', 'AudioAssets', genshin_audio_pack)) == None:
+    if path.exists(path.join(working_dir, 'files', 'AudioAssets', genshin_audio_pack)) == False:
         genshin_audio_pack = open(audio_file, 'r').read()
         util.log('Voice pack is not present, defaulting to ' + genshin_audio_pack)
 
