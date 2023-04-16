@@ -226,17 +226,17 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
     print('')
     util.log('Performing resource download...')
     if force_update: util.log('Force re-download: ENABLED')
-    if download_voices:
-        voice_resources = parse_resource('voice')
-        download_voice(endpoint, voice_resources, force_update)
-    else:
-        util.log('Skipping voice pack...')
-
     if download_bundles == True:
         main_resources = parse_resource('main')
         download_main_assets(endpoint, main_resources, force_update)
     else:
         util.log('Skipping main resources...')
+
+    if download_voices:
+        voice_resources = parse_resource('voice')
+        download_voice(endpoint, voice_resources, force_update)
+    else:
+        util.log('Skipping voice pack...')
 
     if download_cutscenes:
         video_resources = parse_resource('video')
