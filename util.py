@@ -44,7 +44,7 @@ def is_audio_file(filename):
     return search('\.pck$', filename) != None
 
 def is_asset_block_file(filename):
-    return search('\.blk$', filename) != None
+    return search('\.blk$', filename) != None or search('\.json$', filename) != None or search('\.dat$', filename) != None
 
 def is_voice_file(filename):
     if search('^English\\(US\\)/.+\.pck', filename) != None:
