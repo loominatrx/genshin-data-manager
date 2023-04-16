@@ -56,4 +56,4 @@ A: I didn't do this to prevent any slowdown while downloading. Therefore, you ca
 
 If you like what I'm doing, you can donate me on the following website:
 
-<a href="https://trakteer.id/tip/loominatrx"><img src="/readme_assets/support_trakteer.png" width=150></a>
+<a href="https://trakteer.id/loominatrx/tip"><img src="/readme_assets/support_trakteer.png" width=150></a>
