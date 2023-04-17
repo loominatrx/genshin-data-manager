@@ -128,7 +128,7 @@ def download_cutscene(endpoint, resources, force_update):
                 endpoint + 'VideoAssets/' + video['remoteName']
             ])
 
-def download_voice(endpoint, resources, force_update, voice_pack):
+def download_voice(endpoint, resources, force_update, voice_pack=None):
     if voice_pack == None:
         voice_pack = open(audio_file, 'r').read()
         util.log('Using pulled audio_lang_14 file: ' + voice_pack)
@@ -206,8 +206,8 @@ def download_resources(download_bundles=True, download_voices=True, download_cut
                 pull_files()
             else:
                 pass
-
-    pull_files()
+    else:
+        pull_files()
 
     endpoint = get_endpoint()
 
