@@ -40,6 +40,9 @@ def wait_for_android_device():
     log('Waiting for android device...')
     subprocess.run(['adb', 'wait-for-device'], stdout=subprocess.DEVNULL)
 
+def is_aria2_file(filename):
+    return search('\.aria2$', filename) == None
+
 def is_audio_file(filename):
     return search('\.pck$', filename) != None
 

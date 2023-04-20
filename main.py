@@ -312,6 +312,7 @@ def copy_resources():
             # mkdir if the folder don't exist
             subprocess.run(['adb', 'shell', 'mkdir', '-p', genshin_data + re.escape(root.replace(working_dir, '').replace('\\', '/')) + '/'])
             for file in files:
+                if util.is_aria2_file(file): continue # don't push aria2 file
                 if (util.is_cutscene_file(file)) and copy_cutscenes == False:
                     if skipped_cutscene == False:
                         util.log('Skipping cutscenes...')
