@@ -348,7 +348,7 @@ def about_page():
     print('Quoting from the repo:')
     print('This python script allows you to download and manage Genshin Impact\'s game data in your PC!\n')
     print('You can use this to quickly restore the game data in case you accidentally delete the game data\nand don\'t want to spend hours on redownloading 20GB+ worth of data.\n')
-    print('Currently, it only supports full data download (not selective download) and\ncopying ALL required game data to your Android phone.')
+    print('Currently, genshin-data-manager now supports selective download, meaning you don\'t have to\ndownload all the assets and it also supports copying ALL required game data to your Android phone!')
     print('You can choose not to copy the voice audio and/or the video cutscene, but it will ruin your experience\nif you don\'t know what you\'re doing.\n')
 
     # free software notice
@@ -402,10 +402,11 @@ def main_menu(custom_text='', greet_type='info'):
     util.log('What do you want to do today?\n')
 
     util.choice(1, 'Download ALL game resources')
-    util.choice(2, 'Force-update ALL game resources\n')
-    util.choice(3, 'Copy game resources to your phone\n')
-    util.choice(4, 'Download voice packs')
-    util.choice(5, 'Download specific game data\n')
+    util.choice(2, 'Force-update ALL game resources')
+    util.choice(3, 'Download voice packs')
+    util.choice(4, 'Download specific game data\n')
+
+    util.choice(5, 'Copy game resources to your phone\n')
 
     util.choice(9, 'About this app')
     util.choice(0, 'Exit the console app\n')
@@ -421,10 +422,8 @@ def main_menu(custom_text='', greet_type='info'):
     elif c == '2':
         download_resources(force_update=True)
     elif c == '3':
-        copy_resources()
-    elif c == '4':
         download_voice_pack_prompt()
-    elif c == '5':
+    elif c == '4':
         util.clear()
         header()
         download_bundles = util.question('Do you want to download the main resources?')
@@ -434,6 +433,8 @@ def main_menu(custom_text='', greet_type='info'):
         force_update = util.question('Do you want to force-update all those assets?')
 
         download_resources(download_bundles, download_voices, download_cutscenes, force_update)
+    elif c == '5':
+        copy_resources()
     elif c == '9':
         about_page()
     elif c == '0':
