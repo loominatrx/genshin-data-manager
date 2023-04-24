@@ -2,6 +2,8 @@
 
 This python script allows you to download and manage Genshin Impact's game data in your PC
 
+<img src="https://user-images.githubusercontent.com/35314624/233980611-94a7eca2-9439-47b5-965a-ce039214c341.png" width="50%" height="50%" />
+
 ## Prerequisities
 
 - Any working device (either Windows or Linux; not sure with Mac)
