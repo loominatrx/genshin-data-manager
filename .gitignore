@@ -1,0 +1,22 @@
+# python cache
+__pycache__
+
+# genshin files
+files
+
+# download info
+base_revision
+audio_lang_14
+data_versions_remote
+res_versions_remote
+data_versions_persist
+res_versions_persist
+ScriptVersion
+
+# aria2 download list
+main_assets.txt
+voice.*.txt
+cutscenes.txt
+
+# aria2 log
+aria2_download.log
