@@ -1,9 +1,9 @@
 # text styles
-red = '\033[0;31m'
-cyan = '\u001b[0;36m'
-green = '\u001b[0;32m'
-bold = '\033[1m'
-reset = '\033[0m'
+red = '\x1b[31m'
+cyan = '\x1b[36m'
+green = '\x1b[32m'
+bold = '\x1b[1m'
+reset = '\x1b[0m'
 
 def log(str):
     print('{color}[i]: {reset}{str}{reset}'.format(color = cyan, reset = reset, str = str))
