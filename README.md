@@ -17,13 +17,17 @@ genshin-data-manager allows you to download Genshin Impact's required data witho
 - Working PC (either Windows or Linux, not sure with macOS)
 - Genshin Impact's required storage (20 GB+, both on your PC and your phone)
 - Python 3.x+
+- [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools#downloads)
+- [aria2c](https://github.com/aria2/aria2/releases)
 
 ## How to use
 
 - Clone this repository using one of the following methods:
     - `git clone https://github.com/loominatrx/genshin-data-manager`
-    - or download the source directly [here](https://github.com/loominatrx/genshin-data-manager/archive/refs/heads/master.zip) and extract it somewhere.
-- `cd genshin-data-manager` and run `pyhton3 main.py`.
+    - or download the source directly [here](https://github.com/loominatrx/genshin-data-manager/archive/refs/heads/new.zip) and extract it somewhere
+- Extract Android Platform Tools and aria2c to the `genshin-data-manager` folder
+- `cd genshin-data-manager`
+- Run `pyhton3 main.py` on your terminal
 
 ## Notes
 
